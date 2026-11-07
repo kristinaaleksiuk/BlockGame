@@ -225,7 +225,7 @@ async function submit(s){
 async function showLb(){
   var l=$("lbl");$("lbp").classList.add("on");l.innerHTML="";
   function msg(t){var li=document.createElement("li");li.textContent=t;l.appendChild(li)}
-  if(!DB){msg("Рейтинг доступен при входе в аккаунт Claude");return}
+  if(!DB){msg("Рейтинг не доступен. Кристине пока некогда создавать бд");return}
   msg("Загрузка…");
   try{
     var q=await DB.collection("scores").orderBy("score","desc").limit(20).get();
