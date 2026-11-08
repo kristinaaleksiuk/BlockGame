@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Блоки</title>
+<title>Собирай блоки</title>
 <style>
 :root{color-scheme:light;--bg:#fff;--board:#dfe3f2;--cell:#f1f3fb;--text:#1d2150;--accent:#7a1f3d;--muted:#6b7090;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -192,15 +192,15 @@ function place(i,t){
     if(navigator.vibrate)try{navigator.vibrate(25)}catch(e){}
   }else{combo=0;miss++;paint();if(miss%4===0)popText(pick(MISS))}
   score+=gain;$("score").textContent=score;
-  if(score>best){if(best>0&&!rec){rec=true;popText("НОВЫЙ РЕКОРД! Ты жёстко")}best=score;$("best").textContent=best;try{localStorage.setItem("bb-best",best)}catch(e){}}
+  if(score>best){if(best>0&&!rec){rec=true;popText("Ура, НОВЫЙ РЕКОРД!")}best=score;$("best").textContent=best;try{localStorage.setItem("bb-best",best)}catch(e){}}
   if(pieces.every(function(p){return p.used}))fillTray();else drawTray();
   setTimeout(check,n?260:0);
 }
 var miss=0,rec=false;
-var ONE=["Имба!","Кайф","Нишево","Крутышкин","Хомяк рекомендует","Ништяк","Как по маслу","Го ещё"];
-var COMBO=["Комбо ×N, лютый вайб","×N — ты в потоке","Скилл не пропьёшь ×N","Рофл, ×N"];
-var MULTI=["Ауф!","Сигма-ход","Ты вообще человек?","Лютый кайф"];
-var MISS=["Не спи, чемпион","Ты там живой?","Поле не резиновое, бро"];
+var ONE=["Класс!","Супер","Нишевый ход","Крутышкин","Хомяк счастлив","Ништяк","Как по маслу","Го ещё"];
+var COMBO=["Комбо ×N, лютый вайб","×N — ты в потоке","Скилл не пропьёшь ×N","Супер, ×N"];
+var MULTI=["Ауф!","Сигма-ход","Ты точно человек?"];
+var MISS=["Не спи, чемпион","Ты там живой?","Мало места, бро"];
 function pick(a){return a[Math.random()*a.length|0]}
 function popText(s){var e=$("pop");e.textContent=s;e.classList.add("on");clearTimeout(popText.t);popText.t=setTimeout(function(){e.classList.remove("on")},1000)}
 function check(){
