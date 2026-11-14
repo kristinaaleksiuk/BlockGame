@@ -48,7 +48,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 </head>
 <body>
 <div id="bg" aria-hidden="true"></div>
-<header><span>♛ <span id="best">0</span></span><button id="lbbtn" class="sm">Рейтинг</button></header>
+<header><span>♛ <span id="best">0</span></span> <button id="mus" class="sm">Музыка</button> <button id="lbbtn" class="sm">Рейтинг</button></header>
 <div><div id="score">0</div><div id="pop"></div></div>
 <div id="board" aria-label="Игровое поле"></div>
 <div id="tray"></div>
@@ -119,6 +119,41 @@ function drawTray(){
     var s=document.createElement("div");s.className="slot";
     var e=document.createElement("div");e.className="pc"+(p.used?" used":"");
     mk(e,p,Math.floor(C*.55));
+    var MUSIC_URL="BlockMusic.m4a"; /* свой трек: положи mp3 рядом с игрой и впиши "music.mp3" */
+var musicOn=true;try{musicOn=localStorage.getItem("bb-music")!=="0"}catch(e){}
+var au=null,ac=null,tm=null,step=0,started=false;
+
+function note(f,t,d,type,v){
+  var o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d+.02);
+}
+function synthStart(){
+  if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();
+  if(ac.state==="suspended")ac.resume();
+  if(tm)return;
+  var sc=[0,3,5,7,10,12,15,12,10,7,5,3],bs=[0,0,-4,-4,-2,-2,-5,-5];
+  tm=setInterval(function(){
+    var t=ac.currentTime+.05,i=step++;
+    note(220*Math.pow(2,sc[i%sc.length]/12),t,.22,"square",.05);
+    if(i%4===0)note(110*Math.pow(2,bs[(i/4|0)%bs.length]/12),t,.5,"triangle",.09);
+  },230);
+}
+function musicPlay(){
+  if(!musicOn)return;
+  if(MUSIC_URL){if(!au){au=new Audio(MUSIC_URL);au.loop=true;au.volume=.4}au.play().catch(function(){})}
+  else synthStart();
+}
+function musicStop(){if(au)au.pause();clearInterval(tm);tm=null;if(ac)ac.suspend()}
+function musicBtn(){$("mus").textContent=musicOn?"Музыка: вкл":"Музыка: выкл"}
+
+$("mus").addEventListener("click",function(){
+  musicOn=!musicOn;try{localStorage.setItem("bb-music",musicOn?"1":"0")}catch(e){}
+  musicBtn();if(musicOn)musicPlay();else musicStop();
+});
+addEventListener("pointerdown",function(){if(!started){started=true;musicPlay()}});
+document.addEventListener("visibilitychange",function(){if(document.hidden)musicStop();else if(started)musicPlay()});
+musicBtn();
     e.addEventListener("pointerdown",function(ev){start(ev,i,e)});
     s.appendChild(e);trayEl.appendChild(s);
   });
