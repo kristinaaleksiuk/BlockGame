@@ -120,6 +120,8 @@ function drawTray(){
     var e=document.createElement("div");e.className="pc"+(p.used?" used":"");
     mk(e,p,Math.floor(C*.55));
     var MUSIC_URL="BlockMusic.m4a"; /* свой трек: положи mp3 рядом с игрой и впиши "music.mp3" */
+    var TRIM=0.05; /* секунд срезать в начале и конце трека */
+var buf=null,src=null,gn=null;
 var musicOn=true;try{musicOn=localStorage.getItem("bb-music")!=="0"}catch(e){}
 var au=null,ac=null,tm=null,step=0,started=false;
 
@@ -141,10 +143,19 @@ function synthStart(){
 }
 function musicPlay(){
   if(!musicOn)return;
-  if(MUSIC_URL){if(!au){au=new Audio(MUSIC_URL);au.loop=true;au.volume=.4}au.play().catch(function(){})}
+  if(MUSIC_URL)bufStart().catch(fallbackAudio);
   else synthStart();
 }
-function musicStop(){if(au)au.pause();clearInterval(tm);tm=null;if(ac)ac.suspend()}
+function musicStop(){
+  if(au)au.pause();
+  clearInterval(tm);tm=null;
+  if(src){
+    var s=src,g=gn;src=null;
+    g.gain.cancelScheduledValues(ac.currentTime);g.gain.setValueAtTime(g.gain.value,ac.currentTime);
+    g.gain.linearRampToValueAtTime(0,ac.currentTime+.15);
+    setTimeout(function(){try{s.stop()}catch(e){}if(!src&&!tm&&ac)ac.suspend()},200);
+  }else if(ac)ac.suspend();
+}
 function musicBtn(){$("mus").textContent=musicOn?"Музыка: вкл":"Музыка: выкл"}
 
 $("mus").addEventListener("click",function(){
@@ -252,7 +263,18 @@ var SB_KEY="sb_publishable_xAOEBjLbpBV0NbsQjbxnSQ_GbiT1hqK";
 var myName="";try{myName=localStorage.getItem("bb-name")||""}catch(e){}
 function sbOn(){return SB_KEY.indexOf("PASTE")!==0}
 function sbH(extra){var o={apikey:SB_KEY};if(SB_KEY.indexOf("sb_")!==0)o.Authorization="Bearer "+SB_KEY;for(var k in extra)o[k]=extra[k];return o}
-async function submit(s){
+async function bufStart(){
+  if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();
+  if(ac.state==="suspended")await ac.resume();
+  if(!buf){var r=await fetch(MUSIC_URL);buf=await ac.decodeAudioData(await r.arrayBuffer())}
+  if(src||!musicOn)return;
+  gn=ac.createGain();gn.gain.setValueAtTime(0,ac.currentTime);gn.gain.linearRampToValueAtTime(.4,ac.currentTime+.4);
+  src=ac.createBufferSource();src.buffer=buf;src.loop=true;
+  src.loopStart=TRIM;src.loopEnd=Math.max(TRIM+1,buf.duration-TRIM);
+  src.connect(gn);gn.connect(ac.destination);src.start(0,TRIM);
+}
+function fallbackAudio(){if(!au){au=new Audio(MUSIC_URL);au.loop=true;au.volume=.4}au.play().catch(function(){})}
+  async function submit(s){
   var name=($("nm").value||"").trim().slice(0,20);
   if(!name||!sbOn())return false;
   myName=name;try{localStorage.setItem("bb-name",name)}catch(e){}
